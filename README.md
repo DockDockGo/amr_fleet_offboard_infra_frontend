@@ -22,7 +22,7 @@ The Testbed simulator uses the same web-API interfaces as the fully automated as
 2. Navigate to the project directory:
 
    ```bash
-   cd my-multi-page-streamlit-app
+   cd testbed_simulator_app
    ```
 
 3. Create a virtual environment:
@@ -40,7 +40,7 @@ The Testbed simulator uses the same web-API interfaces as the fully automated as
 5. Install the required dependencies using pip:
 
    ```bash
-   pip install -r ../requirements.txt
+   pip install -r requirements.txt
    ```
 
 ## Usage
@@ -48,12 +48,14 @@ The Testbed simulator uses the same web-API interfaces as the fully automated as
 To run the app, execute the following command:
 
 ```bash
-streamlit run app.py
+streamlit run Home.py
 ```
 
 This will start the Streamlit development server and open the app in your default web browser.
 
 ## License
 
-TODO
+This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
+
+Copyright (c) [2023] [Siddhant Wadhwa, Carnegie Mellon University]
 ```
