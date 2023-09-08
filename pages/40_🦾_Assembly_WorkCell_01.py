@@ -1,4 +1,7 @@
 import streamlit as st
+import sys
+sys.path.append("..")  # Add the parent directory to the import path
+from utils import amr_departure_countdown
 
 st.set_page_config(
     page_title="Assembly WorkCell 01",
@@ -29,8 +32,10 @@ st.image(
 col1, col2, col3 = st.columns(3)
 if col1.button("Picked up kit from the AMR", use_container_width=True):
     st.success("The AMR will now depart to service other tasks. Please stay clear of the AMR.")
+    amr_departure_countdown(5)
 if col2.button("Assembled the model", use_container_width=True):
     st.success("Requested an AMR to come pick up the assembled model.")
 if col3.button("Placed the assembled model on an AMR", use_container_width=True):
     st.success("The AMR will now transport the assembled model to the next work cell. Please stay clear of the AMR.")
+    amr_departure_countdown(5)
 

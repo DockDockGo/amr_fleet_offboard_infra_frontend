@@ -1,5 +1,9 @@
 import streamlit as st
 
+import sys
+sys.path.append("..")  # Add the parent directory to the import path
+from utils import amr_departure_countdown
+
 st.set_page_config(
     page_title="Kitting Station",
     page_icon="🍱",
@@ -29,12 +33,15 @@ st.markdown(
 col1, col2, col3, col4 = st.columns(4)
 if col1.button("Picked up the bins from the AMR", use_container_width=True):
     st.success("The AMR will now depart to service other tasks. Please stay clear of the AMR!")
+    amr_departure_countdown(5)
 if col2.button("Assembled the kit", use_container_width=True):
     st.success("Requested an AMR to come pick up the assembled model.!")
 if col3.button("Placed the assembled kit on an AMR", use_container_width=True):
     st.success("The AMR will now transport the assembled kit to an assembly work cell. Please stay clear of the AMR!")
+    amr_departure_countdown(5)
 if col4.button("Placed the parts bins back on an AMR", use_container_width=True):
     st.success("The AMR will now transport the parts bins to the stock room. Please stay clear of the AMR!")
+    amr_departure_countdown(5)
 
 
 
