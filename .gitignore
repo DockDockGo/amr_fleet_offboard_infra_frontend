@@ -1,0 +1,11 @@
+# macOS
+.DS_Store
+
+# Ubuntu
+Thumbs.db
+
+# Python compiled files
+*.pyc
+
+# Vim swap files
+*.swp
