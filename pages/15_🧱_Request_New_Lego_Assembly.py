@@ -14,4 +14,8 @@ st.set_page_config(
 
 st.title("Request New Lego Assembly")
 
-st.write("Display a list of available assemblies here, along with a button to queue an assembly for execution in the testbed.")
+st.write("Add images of lego models here")
+
+st.button("Enqueue Assemly of letter M", use_container_width=True)
+st.button("Enqueue Assemly of letter F", use_container_width=True)
+st.button("Enqueue Assemly of letter I", use_container_width=True)

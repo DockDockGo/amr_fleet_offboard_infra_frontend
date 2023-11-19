@@ -10,6 +10,18 @@ import pandas as pd
 
 from testbed_config import WorkCell, AMR, TaskStatus
 
+st.set_page_config(
+    page_title="Mission Control Panel",
+    page_icon="🎛️",
+    # layout="wide",
+    initial_sidebar_state="expanded",
+    menu_items={
+        # 'Get Help': 'https://www.extremelycoolapp.com/help',
+        # 'Report a bug': "https://www.extremelycoolapp.com/bug",
+        # 'About': "# This is a header. This is an *extremely* cool app!"
+    },
+)
+
 api_base_url = "http://0.0.0.0:8000"
 
 def fetch_all_amr_missions():
@@ -27,7 +39,7 @@ def create_new_amr_mission(amr_id, goal):
         'goal': goal.value,  # Use integer value of the enum
         'enqueue_time': datetime.datetime.now().isoformat(),  # Set enqueue time to now
         # Leave the following fields null/empty
-        'amr_id': None,
+        'amr_id': amr_id,
         'material_transport_task_chain_id': None,
         'assembly_workflow_id': None,
         'start_time': None,
@@ -47,6 +59,8 @@ status_mapping = {e.value: e.name for e in TaskStatus}
 
 # Streamlit interface
 st.title("AMR Mission Control Panel")
+
+st.markdown(f"### Mission Queue")
 
 amr_missions_data = fetch_all_amr_missions()
 if amr_missions_data:
@@ -78,3 +92,12 @@ for amr in AMR:
             st.json(response.json() if response.status_code == 200 else response.text)
     
     st.divider()
+
+def get_first_enqueued_amr_mission(amr_id, get_latest=False):
+    enqueued_status = TaskStatus.ENQUEUED.value
+    url = f"{api_base_url}/amrmissions/?status={enqueued_status}&amr_id={amr_id.value}&ordering=enqueue_time"
+    response = requests.get(url)
+    if response.status_code != 200:
+        raise Exception(f"Error occurred while fetching AMRMissions: {response.text}")
+    
+    return response.json()[0]
