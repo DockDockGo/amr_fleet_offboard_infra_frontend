@@ -1,6 +1,7 @@
 from pty import spawn
 import stat
 import sys
+
 sys.path.append("..")  # Add the parent directory to the import path
 
 import streamlit as st
@@ -39,6 +40,7 @@ st.set_page_config(
 amr_id_mapping = {e.value: e.name for e in AMR}
 workcell_mapping = {e.value: e.name for e in WorkCell}
 
+
 def fetch_assembly_workflows():
     workflows = AssemblyWorkflow.objects.all()
 
@@ -55,6 +57,7 @@ def fetch_assembly_workflows():
 
     return pd.DataFrame(data)
 
+
 def delete_all_assembly_workflows():
     try:
         # Delete instances of models referencing TestbedTask and AMRMission
@@ -69,10 +72,11 @@ def delete_all_assembly_workflows():
         WorkCellState.objects.all().delete()
         AMRState.objects.all().delete()
 
-        st.success('All data has been deleted from the database')
+        st.success("All data has been deleted from the database")
 
     except Exception as e:
-        st.error(f'Error occurred: {e}')
+        st.error(f"Error occurred: {e}")
+
 
 def display_amr_states():
     # Query all AMRState objects
@@ -83,16 +87,23 @@ def display_amr_states():
     for state in amr_states:
         amr_id = state.amr_id
         active_mission = state.active_mission if state.active_mission else "None"
-        active_material_transport_task_chain = state.active_material_transport_task_chain if state.active_material_transport_task_chain else "None"
-        data.append({
-            "amr_id": amr_id,
-            "active_mission": active_mission,
-            "active_material_transport_task_chain": active_material_transport_task_chain,
-            })
+        active_material_transport_task_chain = (
+            state.active_material_transport_task_chain
+            if state.active_material_transport_task_chain
+            else "None"
+        )
+        data.append(
+            {
+                "amr_id": amr_id,
+                "active_mission": active_mission,
+                "active_material_transport_task_chain": active_material_transport_task_chain,
+            }
+        )
     df = pd.DataFrame(data)
     if not df.empty:
-        df['amr_id'] = df['amr_id'].map(amr_id_mapping)
+        df["amr_id"] = df["amr_id"].map(amr_id_mapping)
     st.dataframe(df)
+
 
 def spawn_amrs():
     try:
@@ -104,10 +115,11 @@ def spawn_amrs():
         instance2 = AMRState(amr_id=AMR.MORTY.value)
         instance2.save()
 
-        st.success('AMRs spawned successfully')
-        
+        st.success("AMRs spawned successfully")
+
     except Exception as e:
-        st.error(f'Error occurred: {e}')
+        st.error(f"Error occurred: {e}")
+
 
 def display_workcell_states():
     # Query all WorkCellState objects
@@ -119,16 +131,19 @@ def display_workcell_states():
         workcell_id = state.workcell_id
         active_task = state.active_task if state.active_task else "None"
         docked_amr_id = state.docked_amr_id if state.docked_amr_id else "None"
-        data.append({
-            "workcell_id": workcell_id,
-            "active_task": active_task,
-            "docked_amr_id": docked_amr_id,
-            })
+        data.append(
+            {
+                "workcell_id": workcell_id,
+                "active_task": active_task,
+                "docked_amr_id": docked_amr_id,
+            }
+        )
     df = pd.DataFrame(data)
     if not df.empty:
-        df['workcell_id'] = df['workcell_id'].map(workcell_mapping)
-        df['docked_amr_id'] = df['docked_amr_id'].map(amr_id_mapping)
+        df["workcell_id"] = df["workcell_id"].map(workcell_mapping)
+        df["docked_amr_id"] = df["docked_amr_id"].map(amr_id_mapping)
     st.dataframe(df)
+
 
 def spawn_workcells():
     try:
@@ -138,10 +153,11 @@ def spawn_workcells():
             instance = WorkCellState(workcell_id=workcell_id.value)
             instance.save()
 
-        st.success('WorkCells spawned successfully')
-        
+        st.success("WorkCells spawned successfully")
+
     except Exception as e:
-        st.error(f'Error occurred: {e}')
+        st.error(f"Error occurred: {e}")
+
 
 ######### GUI Layout #########
 
@@ -155,24 +171,24 @@ workflow_data = fetch_assembly_workflows()
 st.dataframe(workflow_data)
 
 # Button to delete all instances
-if st.button('Delete All Assembly Workflows, Task Chains and Tasks'):
+if st.button("Delete All Assembly Workflows, Task Chains and Tasks", use_container_width=True):
     delete_all_assembly_workflows()
 
 st.markdown("## Testbed Assets")
 
 st.markdown("### All AMRs")
-    
+
 # Call the function in your Streamlit app
 display_amr_states()
 
-if st.button('Spawn AMRs'):
+if st.button("Spawn AMRs", use_container_width=True):
     spawn_amrs()
 
 st.markdown("### All WorkCells")
 
 display_workcell_states()
 
-if st.button('Spawn WorkCells'):
+if st.button("Spawn WorkCells", use_container_width=True):
     spawn_workcells()
 
 
@@ -218,6 +234,3 @@ if st.button('Spawn WorkCells'):
 #     details['Assembly Task'] = str(workflow.assembly_task) if workflow.assembly_task else "None"
 
 #     return details
-
-
-

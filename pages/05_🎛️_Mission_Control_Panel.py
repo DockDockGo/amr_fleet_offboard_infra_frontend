@@ -7,6 +7,9 @@ import json
 import datetime
 import streamlit as st
 import pandas as pd
+import numpy as np
+
+from utils import rest_api_base_url
 
 from testbed_config import WorkCell, AMR, TaskStatus
 
@@ -22,10 +25,8 @@ st.set_page_config(
     },
 )
 
-api_base_url = "http://0.0.0.0:8000"
-
 def fetch_all_amr_missions():
-    url = f"{api_base_url}/amrmissions/"
+    url = f"{rest_api_base_url}/amrmissions/"
     response = requests.get(url)
     if response.status_code == 200:
         return response.json()
@@ -35,7 +36,7 @@ def fetch_all_amr_missions():
 def create_new_amr_mission(amr_id, goal):
     data = {
         'status': TaskStatus.ENQUEUED.value,  # Set status to ENQUEUED using integer value
-        'start': 0,  # Temporarily setting this to 0 as it is not currently used on the backend
+        'start': 1,  # Temporarily setting this to 0 as it is not currently used on the backend
         'goal': goal.value,  # Use integer value of the enum
         'enqueue_time': datetime.datetime.now().isoformat(),  # Set enqueue time to now
         # Leave the following fields null/empty
@@ -46,7 +47,7 @@ def create_new_amr_mission(amr_id, goal):
         'end_time': None,
     }
 
-    url = f"{api_base_url}/amrmissions/"
+    url = f"{rest_api_base_url}/amrmissions/"
     headers = {'Content-Type': 'application/json'}
 
     response = requests.post(url, data=json.dumps(data), headers=headers)
@@ -63,9 +64,52 @@ st.title("AMR Mission Control Panel")
 st.markdown(f"### Mission Queue")
 
 amr_missions_data = fetch_all_amr_missions()
+
+# Display dashboard style metrics
 if amr_missions_data:
     df = pd.DataFrame(amr_missions_data)
-    df.sort_values(by='enqueue_time', inplace=True)
+    df['status'] = df['status'].map(status_mapping)
+    
+    # Count the number of missions in RUNNING and COMPLETED status
+    running_count = df[df['status'] == TaskStatus.RUNNING.name].shape[0]
+    completed_count = df[df['status'] == TaskStatus.COMPLETED.name].shape[0]
+
+    # Calculate metrics for COMPLETED missions
+    completed_missions = df[df['status'] == TaskStatus.COMPLETED.name]
+    if not completed_missions.empty:
+        # Convert times to datetime
+        completed_missions['start_time'] = pd.to_datetime(completed_missions['start_time'])
+        completed_missions['end_time'] = pd.to_datetime(completed_missions['end_time'])
+
+        # Calculate completion time in a desired time unit (e.g., seconds)
+        completed_missions['completion_time'] = (completed_missions['end_time'] - completed_missions['start_time']).dt.total_seconds()
+
+        # Calculate the average completion time
+        avg_completion_time = completed_missions['completion_time'].mean()
+
+        # Calculate the standard deviation, min, and max
+        std_deviation = completed_missions['completion_time'].std()
+        min_time = completed_missions['completion_time'].min()
+        max_time = completed_missions['completion_time'].max()
+    else:
+        avg_completion_time = std_deviation = min_time = max_time = np.nan
+    
+    # Display the status counts in a dashboard-style
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric(label="Running Missions", value=running_count)
+    with col2:
+        st.metric(label="Completed Missions", value=completed_count)
+
+    # Display the metrics
+    st.metric(label="Average Completion Time (seconds)", value=f"{avg_completion_time:.2f}" if not np.isnan(avg_completion_time) else "N/A")
+    st.metric(label="Standard Deviation (seconds)", value=f"{std_deviation:.2f}" if not np.isnan(std_deviation) else "N/A")
+    st.metric(label="Minimum Time (seconds)", value=f"{min_time:.2f}" if not np.isnan(min_time) else "N/A")
+    st.metric(label="Maximum Time (seconds)", value=f"{max_time:.2f}" if not np.isnan(max_time) else "N/A")
+
+if amr_missions_data:
+    df = pd.DataFrame(amr_missions_data)
+    df = df.sort_values(by=['enqueue_time'], ascending=False)
     
     # Replace the integer values with enum names
     df['amr_id'] = df['amr_id'].map(amr_id_mapping)
@@ -73,31 +117,39 @@ if amr_missions_data:
     df['status'] = df['status'].map(status_mapping)
 
     df = df[['url', 'amr_id', 'goal', 'enqueue_time', 'status']]
+
+    # Display Table
     st.table(df)
 else:
     st.write("No AMRMission data available.")
 
-for amr in AMR:
-    st.markdown(f"## {amr.name} Commands")
-    for goal in WorkCell:
-        if goal == WorkCell.UNDEFINED:
-            continue
-        # Creating a unique label for each button
-        button_label = f"Send {amr.name} to {goal.name}"
+st.markdown(
+    """
+    TODO: Add a button to change the status of a mission to CANCELLED    
+"""
+)
 
-        if st.button(button_label):
-            response = create_new_amr_mission(amr.value, goal)
-            # Displaying the response from the API call
-            st.write("Response:")
-            st.json(response.json() if response.status_code == 200 else response.text)
-    
-    st.divider()
+# Assuming AMR is an enum or list-like structure with all the AMRs
+amr_list = list(AMR)
 
-def get_first_enqueued_amr_mission(amr_id, get_latest=False):
-    enqueued_status = TaskStatus.ENQUEUED.value
-    url = f"{api_base_url}/amrmissions/?status={enqueued_status}&amr_id={amr_id.value}&ordering=enqueue_time"
-    response = requests.get(url)
-    if response.status_code != 200:
-        raise Exception(f"Error occurred while fetching AMRMissions: {response.text}")
+# Create columns for each AMR
+cols = st.columns(len(amr_list))
+
+for i, amr in enumerate(amr_list):
+    with cols[i]:
+        st.markdown(f"## {amr.name} Commands")
+        for goal in WorkCell:
+            if goal == WorkCell.UNDEFINED:
+                continue
+            # Creating a unique label for each button
+            button_label = f"Send {amr.name} to {goal.name}"
+
+            if st.button(button_label, key=f"{amr.name}_{goal.name}", use_container_width=True):
+                response = create_new_amr_mission(amr.value, goal)
+                # Displaying the response from the API call
+                st.write("Response:")
+                st.json(response.json() if response.status_code == 200 else response.text)
     
-    return response.json()[0]
+    # Add a divider after each AMR's column
+    if i < len(amr_list) - 1:
+        st.divider()
