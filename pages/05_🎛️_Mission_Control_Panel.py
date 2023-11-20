@@ -153,3 +153,27 @@ for i, amr in enumerate(amr_list):
     # Add a divider after each AMR's column
     if i < len(amr_list) - 1:
         st.divider()
+
+st.markdown("## FVD controls")
+
+def create_fvd_fleet_button(goal1, goal2):
+    button_label = f"Send {AMR.RICK.name} to {goal1.name}, {AMR.MORTY.name} to {goal2.name}"
+    if st.button(button_label, key=f"{AMR.RICK.name}_{goal1.name}_{AMR.MORTY.name}_{goal2.name}", use_container_width=True):
+        # Command RICK
+        response = create_new_amr_mission(AMR.RICK.value, goal1)
+        # Displaying the response from the API call
+        st.write("Response:")
+        st.json(response.json() if response.status_code == 200 else response.text)
+        # Command MORTY
+        response = create_new_amr_mission(AMR.MORTY.value, goal2)
+        # Displaying the response from the API call
+        st.write("Response:")
+        st.json(response.json() if response.status_code == 200 else response.text)
+
+st.markdown("Init")
+create_fvd_fleet_button(WorkCell.STOCK_ROOM_2, WorkCell.ASSEMBLY_STATION)
+st.markdown("Demos")
+create_fvd_fleet_button(WorkCell.KITTING_STATION, WorkCell.STOCK_ROOM_2)
+create_fvd_fleet_button(WorkCell.ASSEMBLY_STATION_2, WorkCell.KITTING_STATION)
+create_fvd_fleet_button(WorkCell.QA_STATION, WorkCell.ASSEMBLY_STATION)
+create_fvd_fleet_button(WorkCell.ASSEMBLY_STATION, WorkCell.QA_STATION)
