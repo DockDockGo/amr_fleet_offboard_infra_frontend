@@ -9,7 +9,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-from utils import rest_api_base_url
+from utils import rest_api_base_url, create_testbed_task
 
 from testbed_config import TestbedTaskType, WorkCell, AMR, TaskStatus
 
@@ -37,24 +37,25 @@ def fetch_all_testbed_tasks():
     else:
         return []
     
-def create_testbed_task(workcell_id, testbed_task_type):
-    # URL of the API endpoint to create a new TestbedTask
-    url = f"{rest_api_base_url}/testbedtasks/"
+# def create_testbed_task(workcell_id, testbed_task_type, assembly_type_id):
+#     # URL of the API endpoint to create a new TestbedTask
+#     url = f"{rest_api_base_url}/testbedtasks/"
 
-    # Prepare the data payload for the POST request
-    data = {
-        'status': TaskStatus.ENQUEUED.value,  # Assuming status is managed as a string
-        'enqueue_time': datetime.now().isoformat(),  # Current time in ISO format
-        'workcell_id': workcell_id.value,
-        'testbed_task_type': testbed_task_type.value,
-        # Leave assembly_workflow_id and material_transport_task_chain_id empty
-    }
+#     # Prepare the data payload for the POST request
+#     data = {
+#         'status': TaskStatus.ENQUEUED.value,  # Assuming status is managed as a string
+#         'enqueue_time': datetime.now().isoformat(),  # Current time in ISO format
+#         'workcell_id': workcell_id.value,
+#         'testbed_task_type': testbed_task_type.value,
+#         'assembly_type_id': assembly_type_id,
+#         # Leave assembly_workflow_id and material_transport_task_chain_id empty
+#     }
 
-    # Send the POST request
-    headers = {'Content-Type': 'application/json'}
-    response = requests.post(url, data=json.dumps(data), headers=headers)
+#     # Send the POST request
+#     headers = {'Content-Type': 'application/json'}
+#     response = requests.post(url, data=json.dumps(data), headers=headers)
     
-    return response
+#     return response
 
 st.title("WorkCell Control Panel")
 
@@ -64,8 +65,8 @@ testbed_task_data = fetch_all_testbed_tasks()
 
 if testbed_task_data:
     df = pd.DataFrame(testbed_task_data)
-    # df['status'] = df['status'].map(status_mapping)
-    # df['workcell_id'] = df['status'].map(workcell_mapping)
+    df['status'] = df['status'].map(status_mapping)
+    df['workcell_id'] = df['status'].map(workcell_mapping)
 
     # Count the number of missions in RUNNING and COMPLETED status
     running_count = df[df['status'] == TaskStatus.RUNNING.name].shape[0]
@@ -99,9 +100,12 @@ else:
 
 testbedtasktype_list = list(TestbedTaskType)
 
+st.markdown("## WorkCell Task Dispatcher")
+
+assembly_type_id = int(st.number_input("Assembly type ID", value=1))
+
 # Create columns for each AMR
 cols = st.columns(len(testbedtasktype_list))
-
 for i, testbedtasktype in enumerate(testbedtasktype_list):
     with cols[i]:
         st.markdown(f"## {testbedtasktype.name} Commands")
@@ -112,7 +116,7 @@ for i, testbedtasktype in enumerate(testbedtasktype_list):
             button_label = f"Enqueue {testbedtasktype.name} task at {workcell_id.name}"
 
             if st.button(button_label, key=f"{testbedtasktype.name}_{workcell_id.name}", use_container_width=True):
-                response = create_testbed_task(workcell_id, testbedtasktype)
+                response = create_testbed_task(workcell_id, testbedtasktype, assembly_type_id)
                 # Displaying the response from the API call
                 st.write("Response:")
                 st.json(response.json() if response.status_code == 200 else response.text)

@@ -11,7 +11,7 @@ from pathlib import Path
 import sys
 import pandas as pd
 
-from testbed_config import WorkCell, AMR, TaskStatus
+from testbed_config import WorkCell, AMR, TaskStatus, AssemblyType
 
 # Path to the directory of your Django project
 django_project_path = "/Users/sid/courses/Project/offboard_infra/testbed_emulator_backend/testbed_emulator_backend"

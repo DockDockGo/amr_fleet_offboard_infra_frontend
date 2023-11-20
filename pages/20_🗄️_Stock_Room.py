@@ -1,6 +1,7 @@
 import streamlit as st
 
 import sys
+import os
 sys.path.append("..")  # Add the parent directory to the import path
 # from utils import amr_departure_countdown
 
@@ -14,7 +15,7 @@ import time
 
 import base64
 
-from utils import rest_api_base_url
+from utils import rest_api_base_url, create_testbed_task
 from testbed_config import TestbedTaskType, WorkCell, AMR, TaskStatus
 
 # Initialize session state variables
@@ -74,25 +75,26 @@ def update_testbedtask_status(mission_url, new_status):
     # Return the response JSON if needed
     return response.json()
     
-def create_testbed_task(workcell_id, testbed_task_type):
-    print(f'create_testbed_task: {workcell_id.name}, {testbed_task_type.name}')
-    # URL of the API endpoint to create a new TestbedTask
-    url = f"{rest_api_base_url}/testbedtasks/"
+# def create_testbed_task(workcell_id, testbed_task_type, assembly_type_id):
+#     print(f'create_testbed_task: {workcell_id.name}, {testbed_task_type.name}')
+#     # URL of the API endpoint to create a new TestbedTask
+#     url = f"{rest_api_base_url}/testbedtasks/"
 
-    # Prepare the data payload for the POST request
-    data = {
-        'status': TaskStatus.ENQUEUED.value,  # Assuming status is managed as a string
-        'enqueue_time': datetime.now().isoformat(),  # Current time in ISO format
-        'workcell_id': workcell_id.value,
-        'testbed_task_type': testbed_task_type.value,
-        # Leave assembly_workflow_id and material_transport_task_chain_id empty
-    }
+#     # Prepare the data payload for the POST request
+#     data = {
+#         'status': TaskStatus.ENQUEUED.value,  # Assuming status is managed as a string
+#         'enqueue_time': datetime.now().isoformat(),  # Current time in ISO format
+#         'workcell_id': workcell_id.value,
+#         'testbed_task_type': testbed_task_type.value,
+#         'assembly_type_id': assembly_type_id,
+#         # Leave assembly_workflow_id and material_transport_task_chain_id empty
+#     }
 
-    # Send the POST request
-    headers = {'Content-Type': 'application/json'}
-    response = requests.post(url, data=json.dumps(data), headers=headers)
+#     # Send the POST request
+#     headers = {'Content-Type': 'application/json'}
+#     response = requests.post(url, data=json.dumps(data), headers=headers)
     
-    return response
+#     return response
 
 def fetch_tasks():
     task = get_enqueued_stockroom_tasks(WorkCell.STOCK_ROOM)
@@ -100,6 +102,7 @@ def fetch_tasks():
         st.session_state.current_task_url = task['url']
         # st.write(f'st.session_state.current_task_url: {st.session_state.current_task_url}')
         st.session_state.current_task_type = task['testbed_task_type']
+        st.session_state.current_assembly_type_id = task['assembly_type_id']
         # st.write(f'st.session_state.current_task_type: {st.session_state.current_task_type}')
         st.session_state.check_tasks = False
         update_testbedtask_status(st.session_state.current_task_url, TaskStatus.RUNNING)
@@ -108,11 +111,14 @@ def complete_task():
     update_testbedtask_status(st.session_state.current_task_url, TaskStatus.COMPLETED)
     
     if st.session_state.current_task_type == TestbedTaskType.UNLOADING.value:
-        create_testbed_task(WorkCell.STOCK_ROOM, TestbedTaskType.PROCESSING)
+        create_testbed_task(WorkCell.STOCK_ROOM, TestbedTaskType.PROCESSING, st.session_state.current_assembly_type_id)
+    if st.session_state.current_task_type == TestbedTaskType.PROCESSING.value:
+        create_testbed_task(WorkCell.STOCK_ROOM, TestbedTaskType.LOADING, st.session_state.current_assembly_type_id)
     
     st.session_state.check_tasks = True
     st.session_state.current_task_url = None
     st.session_state.current_task_type = None
+    st.session_state.current_assembly_type_id = None
 
     st.experimental_rerun()
 
@@ -129,6 +135,12 @@ def schedule_rerun():
     if 'rerun_in' in st.session_state and time.time() > st.session_state.rerun_in:
         del st.session_state.rerun_in
         st.experimental_rerun()
+
+assembly_type_id_to_dir = {
+    1: 'assets/build_instructions/lego_M',
+    2: 'assets/build_instructions/lego_F',
+    3: 'assets/build_instructions/lego_I',
+}
 
 ################## GUI LAYOUT ##################
 
@@ -152,12 +164,13 @@ if st.session_state.current_task_type is not None:
         if st.button("I've unloaded the payload from the AMR", use_container_width=True):
             complete_task()
     elif st.session_state.current_task_type == TestbedTaskType.PROCESSING.value:
-        st.write("Display instructions about which parts bins to load onto the AMR")
+        st.markdown("#### Please fetch all parts bins containing the following parts from the stock room.")
+        st.image(os.path.join(assembly_type_id_to_dir[st.session_state.current_assembly_type_id], '1_1x.png'))
         if st.button("I've fetched the required parts bins", use_container_width=True):
             complete_task()
     elif st.session_state.current_task_type == TestbedTaskType.LOADING.value:
         # st.image("assets/payload_loading.gif", use_container_width=True)
-        st.markdown("#### Please load the payload from the top surface of the AMR.")
+        st.markdown("#### Please load the payload onto the top surface of the AMR.")
         # Hack to display gif
         file_ = open("assets/payload_loading.gif", "rb")
         contents = file_.read()

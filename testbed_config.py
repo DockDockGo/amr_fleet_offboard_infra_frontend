@@ -31,6 +31,10 @@ class TestbedTaskType(Enum):
     PROCESSING = 2
     LOADING = 3
 
+class AssemblyType(Enum):
+    M = 1
+    F = 2
+    I = 3
 
 ASSEMBLY_WORKFLOW_PRESET = {
     'fetch_parts_bins': {
