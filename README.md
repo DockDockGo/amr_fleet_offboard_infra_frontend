@@ -1,34 +1,24 @@
-# Testbed Simulator App
-
-This is an app that runs on the MFI Testbed workstation that serves as a stand-in for the automated assembly testbed. It communicates with Human-Robot Interface (HRI) terminals at the:
-1. Stock Room
-2. Kitting Station
-3. Assembly WorkCell #1
-4. Assembly WorkCell #2
-5. Display Station
-in order to guide human workers to execute the tasks that will later be automated by partner testbed projects.
-
-The Testbed simulator uses the same web-API interfaces as the fully automated assembly testbed, designed with swapability in mind. It is separated from the offboard infrastructed required to manage the fleet of AMRs that run on the MFI workstation.
 
 
-## Installation (TODO: update based on new workspace structure)
+
+## Installation
 
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/your-username/my-multi-page-streamlit-app.git
+   git clone https://github.com/DockDockGo/amr_fleet_offboard_infra_frontend.git
    ```
 
 2. Navigate to the project directory:
 
    ```bash
-   cd testbed_simulator_app
+   cd amr_fleet_offboard_infra_frontend
    ```
 
 3. Create a virtual environment:
 
    ```bash
-   python3 -m venv venv
+   python -m venv venv
    ```
 
 4. Activate the virtual environment:
@@ -43,6 +33,10 @@ The Testbed simulator uses the same web-API interfaces as the fully automated as
    pip install -r requirements.txt
    ```
 
+6. Change https://github.com/DockDockGo/amr_fleet_offboard_infra_frontend/blob/85df3925460e07cdb42c286959ad6e06bd029f2c/utils.py#L11 to contain the discoverable IP address of the machine running the backend server (https://github.com/DockDockGo/amr_fleet_offboard_infra_backend/tree/master)
+
+7. If you'd like the ability to use the reset page of this webapp in order to clear any previous missions from the database, this app must be run on the same machine as the backend server, and https://github.com/DockDockGo/amr_fleet_offboard_infra_frontend/blob/85df3925460e07cdb42c286959ad6e06bd029f2c/pages/80_%F0%9F%8E%9B%EF%B8%8F_Reset_Fleet_Infra_Missions.py#L18 needs to be updated to the full path of the backend server's django project directory.
+
 ## Usage
 
 To run the app, execute the following command:
@@ -51,7 +45,7 @@ To run the app, execute the following command:
 streamlit run Home.py
 ```
 
-This will start the Streamlit development server and open the app in your default web browser.
+This will start the Streamlit development server and open the app in your default web browser. The url containing the port in use will be printed to console output.
 
 ## License
 
