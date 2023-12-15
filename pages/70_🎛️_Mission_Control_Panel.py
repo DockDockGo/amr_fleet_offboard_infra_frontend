@@ -13,10 +13,12 @@ from utils import rest_api_base_url
 
 from testbed_config import WorkCell, AMR, TaskStatus
 
+SENTINEL_DOCK_ID = 100
+
 st.set_page_config(
     page_title="Mission Control Panel",
     page_icon="🎛️",
-    # layout="wide",
+    layout="wide",
     initial_sidebar_state="expanded",
     menu_items={
         # 'Get Help': 'https://www.extremelycoolapp.com/help',
@@ -36,7 +38,7 @@ def fetch_all_amr_missions():
 def create_new_amr_mission(amr_id, goal):
     data = {
         'status': TaskStatus.ENQUEUED.value,  # Set status to ENQUEUED using integer value
-        'start': 1,  # Temporarily setting this to 0 as it is not currently used on the backend
+        'start': SENTINEL_DOCK_ID,  # Temporarily setting this to 0 as it is not currently used on the backend
         'goal': goal.value,  # Use integer value of the enum
         'enqueue_time': datetime.datetime.now().isoformat(),  # Set enqueue time to now
         # Leave the following fields null/empty
@@ -177,3 +179,52 @@ create_fvd_fleet_button(WorkCell.KITTING_STATION, WorkCell.STOCK_ROOM_2)
 create_fvd_fleet_button(WorkCell.ASSEMBLY_STATION_2, WorkCell.KITTING_STATION)
 create_fvd_fleet_button(WorkCell.QA_STATION, WorkCell.ASSEMBLY_STATION)
 create_fvd_fleet_button(WorkCell.ASSEMBLY_STATION, WorkCell.QA_STATION)
+
+st.markdown("## Manual mission status overrides")
+
+
+
+def update_testbedtask_status(mission_url, new_status=TaskStatus.CANCELED):
+    # Prepare the data to be patched
+    patch_data = {'status': new_status.value}
+    if new_status == TaskStatus.RUNNING:
+        patch_data['start_time'] = datetime.now().isoformat()
+    if new_status == TaskStatus.COMPLETED:
+        patch_data['end_time'] = datetime.now().isoformat()
+
+    print(f'mission_url: {mission_url}, patch_data: {patch_data}')
+
+    # Send the PATCH request
+    response = requests.patch(mission_url, json=patch_data)
+
+    # Check if the request was successful
+    # if response.status_code != 200:
+    #     raise Exception(f'Error occurred while updating AMRMission: {response.text}')
+    
+    # Return the response JSON if needed
+    return response.json()
+
+st.markdown("### Update Mission Status")
+
+# Filter out the missions that are not completed
+non_completed_missions = df[df['status'] != TaskStatus.COMPLETED.name]
+non_completed_missions = non_completed_missions[non_completed_missions['status'] != TaskStatus.CANCELED.name]
+
+# Iterate through each non-completed mission and create a button
+for index, mission in non_completed_missions.iterrows():
+    mission_url = mission['url']
+    mission_id = mission['amr_id']
+    mission_status = mission['status']
+
+    # Button label with mission ID and current status
+    button_label = f"Update Status of {mission_url} (Current: {mission_status})"
+
+    # Create a button for each mission
+    if st.button(button_label, key=f"update_{mission_url}"):
+        # Call update_testbedtask_status with the mission URL
+        # Assuming you want to update the status to CANCELLED as an example
+        update_response = update_testbedtask_status(mission_url, TaskStatus.CANCELED)
+        
+        # Display the response
+        st.write("Response:")
+        st.json(update_response if update_response.status_code == 200 else update_response.text)

@@ -9,6 +9,7 @@ class WorkCell(Enum):
     QA_STATION = 2
     STOCK_ROOM_2 = 4
     ASSEMBLY_STATION_2 = 5
+    STAY_WHERE_IT_IS = 100
 
 
 class TaskStatus(Enum):

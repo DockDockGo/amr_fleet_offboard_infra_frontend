@@ -120,3 +120,16 @@ for i, testbedtasktype in enumerate(testbedtasktype_list):
                 # Displaying the response from the API call
                 st.write("Response:")
                 st.json(response.json() if response.status_code == 200 else response.text)
+
+st.markdown("## FVD controls")
+st.markdown("No init")
+st.markdown("Demos")
+
+# if st.button(button_label, key=f"{testbedtasktype.name}_{workcell_id.name}_", use_container_width=True):
+
+# def create_workcell_button(workcell_id, testbedtasktype, button_label):
+#     if st.button(button_label, key=f"{}", use_container_width=True):
+#         response = create_testbed_task(workcell_id, testbedtasktype, assembly_type_id)
+#         # Displaying the response from the API call
+#         st.write("Response:")
+#         st.json(response.json() if response.status_code == 200 else response.text)
