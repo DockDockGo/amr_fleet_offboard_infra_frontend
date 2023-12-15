@@ -9,3 +9,7 @@ Thumbs.db
 
 # Vim swap files
 *.swp
+
+.vscode/
+venv/
+.streamlit/
