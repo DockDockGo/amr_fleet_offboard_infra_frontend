@@ -8,8 +8,7 @@ import json
 sys.path.append(".")  # Add the current directory to the import path
 from testbed_config import TestbedTaskType, WorkCell, AMR, TaskStatus
 
-rest_api_base_url = "http://192.168.1.9:8000"
-# rest_api_base_url = "http://192.168.0.177:8000"
+rest_api_base_url = "http://192.168.0.46:8000"
 
 def amr_departure_countdown(time_s):
     progress_text = "AMR is departing in " + str(time_s) + " seconds. Please stay clear of the AMR!"

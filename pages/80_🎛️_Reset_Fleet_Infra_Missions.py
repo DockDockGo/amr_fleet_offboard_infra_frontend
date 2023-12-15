@@ -7,6 +7,7 @@ sys.path.append("..")  # Add the parent directory to the import path
 import streamlit as st
 import os
 import django
+from django.apps import apps
 from pathlib import Path
 import sys
 import pandas as pd
@@ -14,14 +15,15 @@ import pandas as pd
 from testbed_config import WorkCell, AMR, TaskStatus, AssemblyType
 
 # Path to the directory of your Django project
-django_project_path = "/Users/sid/courses/Project/offboard_infra/testbed_emulator_backend/testbed_emulator_backend"
+django_project_path = "/Users/sid/courses/Project/offboard_infra/testbed_emulator_backend/testbed_emulator_backend"  # Replace with your backend project path
 sys.path.insert(0, django_project_path)
 
 # Django project settings
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "testbed_emulator_backend.settings")
 
 # Set up Django
-django.setup()
+if not apps.ready:
+    django.setup()
 
 from testbed_emulator_backend_app.models import *  # Replace 'yourapp' with the name of your Django app
 
@@ -108,11 +110,11 @@ def display_amr_states():
 def spawn_amrs():
     try:
         # Create the first instance with amr_id set to AMR.RICK.value
-        instance1 = AMRState(amr_id=AMR.RICK.value)
+        instance1 = AMRState(amr_id=AMR.AMR_1.value)
         instance1.save()
 
         # Create the second instance with amr_id set to AMR.MORTY.value
-        instance2 = AMRState(amr_id=AMR.MORTY.value)
+        instance2 = AMRState(amr_id=AMR.AMR_2.value)
         instance2.save()
 
         st.success("AMRs spawned successfully")
@@ -171,8 +173,10 @@ workflow_data = fetch_assembly_workflows()
 st.dataframe(workflow_data)
 
 # Button to delete all instances
-if st.button("Delete All Assembly Workflows, Task Chains and Tasks", use_container_width=True):
+if st.button("Reset All Missions", use_container_width=True):
     delete_all_assembly_workflows()
+    spawn_amrs()
+    spawn_workcells()
 
 st.markdown("## Testbed Assets")
 
@@ -181,56 +185,6 @@ st.markdown("### All AMRs")
 # Call the function in your Streamlit app
 display_amr_states()
 
-if st.button("Spawn AMRs", use_container_width=True):
-    spawn_amrs()
-
 st.markdown("### All WorkCells")
 
 display_workcell_states()
-
-if st.button("Spawn WorkCells", use_container_width=True):
-    spawn_workcells()
-
-
-# def get_workflow_status(workflow_id):
-#     workflow = AssemblyWorkflow.objects.get(id=workflow_id)
-#     details = {
-#         "ID": workflow.id,
-#         "Model Assembly Type ID": workflow.model_assembly_type_id,
-#         # Add more fields from AssemblyWorkflow if necessary
-#     }
-
-#     # Existing logic to fetch details from 'Fetch Parts Bins Task' and 'Transport Parts Bins to Kitting Station Task Chain'
-#     # ...
-
-#     # Transport Kitting Task Payload to Assembly Station Task Chain
-#     transport_kitting_to_assembly = workflow.transport_kitting_task_payload_to_assembly_station
-#     if transport_kitting_to_assembly:
-#         details['Transport Kitting to Assembly Station'] = {
-#             "Navigate to Source": str(transport_kitting_to_assembly.navigate_to_source_subtask) if transport_kitting_to_assembly.navigate_to_source_subtask else "None",
-#             "Loading Subtask": str(transport_kitting_to_assembly.loading_subtask) if transport_kitting_to_assembly.loading_subtask else "None",
-#             "Navigate to Sink": str(transport_kitting_to_assembly.navigate_to_sink_subtask) if transport_kitting_to_assembly.navigate_to_sink_subtask else "None",
-#             "Unloading Subtask": str(transport_kitting_to_assembly.unloading_subtask) if transport_kitting_to_assembly.unloading_subtask else "None",
-#         }
-#     else:
-#         details['Transport Kitting to Assembly Station'] = "None"
-
-#     # Kitting Task
-#     details['Kitting Task'] = str(workflow.kitting_task) if workflow.kitting_task else "None"
-
-#     # Transport Assembly Task Payload to QA Station Task Chain
-#     transport_assembly_to_qa = workflow.transport_assembly_task_payload_to_qa_station
-#     if transport_assembly_to_qa:
-#         details['Transport Assembly to QA Station'] = {
-#             "Navigate to Source": str(transport_assembly_to_qa.navigate_to_source_subtask) if transport_assembly_to_qa.navigate_to_source_subtask else "None",
-#             "Loading Subtask": str(transport_assembly_to_qa.loading_subtask) if transport_assembly_to_qa.loading_subtask else "None",
-#             "Navigate to Sink": str(transport_assembly_to_qa.navigate_to_sink_subtask) if transport_assembly_to_qa.navigate_to_sink_subtask else "None",
-#             "Unloading Subtask": str(transport_assembly_to_qa.unloading_subtask) if transport_assembly_to_qa.unloading_subtask else "None",
-#         }
-#     else:
-#         details['Transport Assembly to QA Station'] = "None"
-
-#     # Assembly Task
-#     details['Assembly Task'] = str(workflow.assembly_task) if workflow.assembly_task else "None"
-
-#     return details
